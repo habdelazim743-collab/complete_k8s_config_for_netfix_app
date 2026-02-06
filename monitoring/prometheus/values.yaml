@@ -1,0 +1,98 @@
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    alertmanagerConfigNamespaceSelector:
+      matchLabels:
+        alertmanager: netfix
+    alertmanagerConfigSelector:
+      matchLabels:
+        alertmanager: netfix
+    replicas: 1
+    resources:
+      limits:
+        cpu: 300m
+        memory: 300Mi
+      requests:
+        cpu: 100m
+        memory: 150Mi
+
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin123
+  replicas: 1
+  persistence:
+    enabled: true
+    accessModes: [ReadWriteOnce]
+    size: 5Gi
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 300m
+      memory: 400Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+          isDefault: true
+  dashboards:
+    default:
+      kubernetes-cluster:
+        gnetId: 7249
+        revision: 1
+        datasource: Prometheus
+      node-exporter:
+        gnetId: 1860
+        revision: 27
+        datasource: Prometheus
+      prometheus-stats:
+        gnetId: 2
+        revision: 2
+        datasource: Prometheus
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    replicas: 1
+    retention: 15d
+    scrapeInterval: 30s
+    evaluationInterval: 30s
+    ruleSelector: {}
+    ruleNamespaceSelector: {}
+    resources:
+      limits:
+        cpu: 800m
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 1Gi
+
+kubeStateMetrics:
+  enabled: true
+  resources:
+    limits:
+      cpu: 150m
+      memory: 150Mi
+    requests:
+      cpu: 50m
+      memory: 80Mi
+
+nodeExporter:
+  enabled: true
+  resources:
+    limits:
+      cpu: 150m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
