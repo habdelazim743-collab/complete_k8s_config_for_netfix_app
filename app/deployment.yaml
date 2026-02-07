@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-deployment
-  namespace: default
   labels:
     app: app
 spec:
@@ -22,10 +21,10 @@ spec:
     spec:
       containers:
         - name: app
-          image: mahmoudtots/netflix:48
+          image: nginx:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 5000
+            - containerPort: 80
               protocol: TCP
           resources:
             requests:
@@ -34,4 +33,3 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
-
