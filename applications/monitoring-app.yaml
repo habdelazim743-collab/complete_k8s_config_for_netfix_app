@@ -34,7 +34,7 @@ spec:
     # Elasticsearch
     - repoURL: https://helm.elastic.co
       chart: elasticsearch
-      targetRevision: 8.12.0
+      targetRevision: 8.11.3
       helm:
         valueFiles:
           - $values/monitoring/elk/elasticsearch-values.yaml
@@ -42,7 +42,7 @@ spec:
     # Kibana
     - repoURL: https://helm.elastic.co
       chart: kibana
-      targetRevision: 8.12.0
+      targetRevision: 8.11.3
       helm:
         valueFiles:
           - $values/monitoring/elk/kibana-values.yaml
@@ -50,7 +50,7 @@ spec:
     # Filebeat
     - repoURL: https://helm.elastic.co
       chart: filebeat
-      targetRevision: 8.12.0
+      targetRevision: 8.11.3
       helm:
         valueFiles:
           - $values/monitoring/elk/filebeat-values.yaml
