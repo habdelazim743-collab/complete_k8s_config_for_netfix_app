@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/habdelazim743-collab/complete_k8s_config_for_netfix_app
     targetRevision: main
     path: applications
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
