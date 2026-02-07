@@ -17,6 +17,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
 
+
   sources:
     # repo بتاع values
     - repoURL: https://github.com/habdelazim743-collab/complete_k8s_config_for_netfix_app
@@ -34,7 +35,7 @@ spec:
     # Elasticsearch
     - repoURL: https://helm.elastic.co
       chart: elasticsearch
-      targetRevision: 8.11.3
+      targetRevision: 7.17.3
       helm:
         valueFiles:
           - $values/monitoring/elk/elasticsearch-values.yaml
@@ -42,7 +43,7 @@ spec:
     # Kibana
     - repoURL: https://helm.elastic.co
       chart: kibana
-      targetRevision: 8.11.3
+      targetRevision: 7.17.3
       helm:
         valueFiles:
           - $values/monitoring/elk/kibana-values.yaml
@@ -50,7 +51,7 @@ spec:
     # Filebeat
     - repoURL: https://helm.elastic.co
       chart: filebeat
-      targetRevision: 8.11.3
+      targetRevision: 7.17.3
       helm:
         valueFiles:
           - $values/monitoring/elk/filebeat-values.yaml
