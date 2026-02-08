@@ -18,11 +18,21 @@ volumeClaimTemplate:
     requests:
       storage: 15Gi
 
-# Add this section to fix the readiness probe
+# Override the default readiness probe script to accept yellow status
 readinessProbe:
-  httpGet:
-    path: /_cluster/health?wait_for_status=yellow&timeout=1s
-    port: 9200
+  exec:
+    command:
+      - bash
+      - -c
+      - |
+        #!/usr/bin/env bash -e
+        # Accept yellow status for multi-node clusters
+        http () {
+          local path="${1}"
+          curl -XGET -s -k --fail "http://127.0.0.1:9200${path}"
+        }
+        
+        http "/_cluster/health?wait_for_status=yellow&timeout=1s"
   initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
