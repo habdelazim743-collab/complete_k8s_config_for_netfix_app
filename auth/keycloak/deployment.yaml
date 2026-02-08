@@ -16,8 +16,10 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0.1
+
           args:
-            - start
+            - start-dev
+
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
@@ -38,13 +40,10 @@ spec:
               value: "true"
 
             - name: KC_HOSTNAME
-              value: auth-netfix.habdelazim.xyz
+              value: auth-netflix.habdelazim.xyz
 
             - name: KC_HOSTNAME_STRICT_HTTPS
-              value: "true"
-
-            - name: KC_DB
-              value: postgres
+              value: "false"
 
           envFrom:
             - secretRef:
