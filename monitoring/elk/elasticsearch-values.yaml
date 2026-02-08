@@ -4,10 +4,10 @@ minimumMasterNodes: 1
 
 resources:
   requests:
-    cpu: 500m
-    memory: 2Gi
+    cpu: 300m
+    memory: 1.5Gi
   limits:
-    cpu: 1
+    cpu: 800m
     memory: 2Gi
 
 volumeClaimTemplate:
@@ -16,5 +16,5 @@ volumeClaimTemplate:
   storageClassName: gp2
   resources:
     requests:
-      storage: 20Gi
+      storage: 15Gi
 

@@ -4,9 +4,9 @@ replicas: 1
 
 resources:
   requests:
-    cpu: 200m
-    memory: 512Mi
+    cpu: 100m
+    memory: 400Mi
   limits:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 300m
+    memory: 800Mi
 

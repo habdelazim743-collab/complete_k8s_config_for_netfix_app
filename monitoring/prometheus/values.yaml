@@ -10,11 +10,11 @@ alertmanager:
     replicas: 1
     resources:
       limits:
-        cpu: 300m
-        memory: 300Mi
+        cpu: 200m
+        memory: 200Mi
       requests:
-        cpu: 100m
-        memory: 150Mi
+        cpu: 50m
+        memory: 100Mi
 
 grafana:
   enabled: true
@@ -30,11 +30,11 @@ grafana:
     port: 80
   resources:
     limits:
-      cpu: 300m
-      memory: 400Mi
+      cpu: 200m
+      memory: 128Mi
     requests:
-      cpu: 100m
-      memory: 200Mi
+      cpu: 50m
+      memory: 128Mi
   datasources:
     datasources.yaml:
       apiVersion: 1
@@ -70,29 +70,29 @@ prometheus:
     ruleNamespaceSelector: {}
     resources:
       limits:
-        cpu: 800m
-        memory: 2Gi
+        cpu: 500m
+        memory: 1.5Gi
       requests:
-        cpu: 250m
-        memory: 1Gi
+        cpu: 200m
+        memory: 800Gi
 
 kubeStateMetrics:
   enabled: true
   resources:
     limits:
-      cpu: 150m
-      memory: 150Mi
+      cpu: 100m
+      memory: 100Mi
     requests:
       cpu: 50m
-      memory: 80Mi
+      memory: 64Mi
 
 nodeExporter:
   enabled: true
   resources:
     limits:
-      cpu: 150m
-      memory: 128Mi
+      cpu: 100m
+      memory: 100Mi
     requests:
       cpu: 50m
-      memory: 64Mi
+      memory: 50Mi
 
