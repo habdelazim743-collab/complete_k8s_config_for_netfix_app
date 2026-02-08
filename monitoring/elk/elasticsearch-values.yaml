@@ -18,3 +18,13 @@ volumeClaimTemplate:
     requests:
       storage: 15Gi
 
+# Add this section to fix the readiness probe
+readinessProbe:
+  httpGet:
+    path: /_cluster/health?wait_for_status=yellow&timeout=1s
+    port: 9200
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 3
+  failureThreshold: 3
