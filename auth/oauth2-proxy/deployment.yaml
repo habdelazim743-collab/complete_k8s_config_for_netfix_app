@@ -5,6 +5,8 @@ metadata:
   namespace: auth
   labels:
     app: oauth2-proxy
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"  
 spec:
   replicas: 1
   selector:
