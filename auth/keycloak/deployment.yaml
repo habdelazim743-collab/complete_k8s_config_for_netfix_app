@@ -5,9 +5,6 @@ metadata:
   namespace: auth
   annotations:
     argocd.argoproj.io/sync-wave: "1"
-    #argocd.argoproj.io/depends-on: |
-    #- externalsecrets.external-secrets.io/keycloak-db
-    #- externalsecrets.external-secrets.io/keycloak-admin
 spec:
   replicas: 1
   selector:
@@ -21,57 +18,42 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0.1
-
-          command:
-            - sh
-            - -c
           args:
-            - |
-              kc.sh build --db=postgres && kc.sh start --optimized
-
+            - start
+            - --db=postgres
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN
-
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN_PASSWORD
-
             - name: KC_PROXY
               value: edge
-
             - name: KC_HTTP_ENABLED
               value: "true"
-
             - name: KC_HOSTNAME
               value: auth-netflix.habdelazim.xyz
-
             - name: KC_HOSTNAME_STRICT_HTTPS
               value: "false"
-
           envFrom:
             - secretRef:
                 name: keycloak-db
-
           ports:
             - containerPort: 8080
-
           livenessProbe:
             httpGet:
               path: /health/live
               port: 8080
             initialDelaySeconds: 90
             periodSeconds: 10
-
           readinessProbe:
             httpGet:
               path: /health/ready
               port: 8080
             initialDelaySeconds: 60
             periodSeconds: 10
-
