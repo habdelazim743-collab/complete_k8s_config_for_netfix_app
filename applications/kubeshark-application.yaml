@@ -3,15 +3,13 @@ kind: Application
 metadata:
   name: kubeshark
   namespace: argocd
-  labels:
-    argocd.argoproj.io/instance: netfix-root
 spec:
   project: default
 
   source:
     repoURL: https://helm.kubeshark.co
     chart: kubeshark
-    targetRevision: "*"
+    targetRevision: 52.2.5
     helm:
       valueFiles:
         - kubeshark/values.yaml
