@@ -64,6 +64,12 @@ spec:
             - containerPort: 8080
               name: http
               protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+              failureThreshold: 60
+              periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /health/live
