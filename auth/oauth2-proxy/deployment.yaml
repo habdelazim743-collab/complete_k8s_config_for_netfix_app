@@ -29,13 +29,13 @@ spec:
             - --oidc-issuer-url=https://auth-netflix.habdelazim.xyz/realms/master
             - --client-id=oauth2-proxy
 
-            # - --client-secret=$(OAUTH2_PROXY_CLIENT_SECRET)
+            - --client-secret=$(OAUTH2_PROXY_CLIENT_SECRET)
             # ❌ REMOVE: client secret must NOT be hardcoded in args.
             # ❌ It will be provided at runtime via Kubernetes Secret.
 
-            - --upstream=http://app-service.netfix-app.svc.cluster.local:80
+            - --upstream=http://app-service.default.svc.cluster.local:80
 
-            # - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
+            - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
             # ❌ REMOVE: cookie secret must NOT be hardcoded in args.
             # ❌ It will be provided at runtime via Kubernetes Secret.
 
