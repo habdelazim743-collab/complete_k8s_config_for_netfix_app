@@ -4,6 +4,9 @@ metadata:
   name: keycloak
   namespace: auth
   argocd.argoproj.io/sync-wave: "3"
+  argocd.argoproj.io/depends-on: |
+    - externalsecrets.external-secrets.io/keycloak-db
+    - externalsecrets.external-secrets.io/keycloak-admin
 spec:
   replicas: 1
   selector:
