@@ -27,7 +27,7 @@ spec:
             - -c
           args:
             - |
-              kc.sh build && kc.sh start --optimized
+              kc.sh build --db=postgres && kc.sh start --optimized
 
           env:
             - name: KEYCLOAK_ADMIN
