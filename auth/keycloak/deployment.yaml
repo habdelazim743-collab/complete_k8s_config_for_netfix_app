@@ -18,13 +18,8 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0.1
-          command:
-            - /bin/bash
-            - -c
           args:
-            - |
-              /opt/keycloak/bin/kc.sh build --db=postgres
-              /opt/keycloak/bin/kc.sh start --optimized
+            - start-dev
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
@@ -36,28 +31,42 @@ spec:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN_PASSWORD
-            - name: KC_PROXY
-              value: edge
-            - name: KC_HTTP_ENABLED
-              value: "true"
+            - name: KC_DB
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB
+            - name: KC_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_URL
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_USERNAME
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_PASSWORD
             - name: KC_HOSTNAME
               value: auth-netflix.habdelazim.xyz
-            - name: KC_HOSTNAME_STRICT_HTTPS
-              value: "false"
-          envFrom:
-            - secretRef:
-                name: keycloak-db
+            - name: KC_PROXY
+              value: edge
           ports:
             - containerPort: 8080
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 8080
-            initialDelaySeconds: 120
-            periodSeconds: 10
+              name: http
           readinessProbe:
             httpGet:
               path: /health/ready
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
               port: 8080
             initialDelaySeconds: 90
             periodSeconds: 10
