@@ -18,9 +18,13 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0.1
+          command:
+            - /bin/bash
+            - -c
           args:
-            - start
-            - --db=postgres
+            - |
+              /opt/keycloak/bin/kc.sh build --db=postgres
+              /opt/keycloak/bin/kc.sh start --optimized
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
@@ -49,11 +53,11 @@ spec:
             httpGet:
               path: /health/live
               port: 8080
-            initialDelaySeconds: 90
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health/ready
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 10
