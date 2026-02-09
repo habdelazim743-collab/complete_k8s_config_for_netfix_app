@@ -31,26 +31,6 @@ spec:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN_PASSWORD
-            - name: KC_DB
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-db
-                  key: KC_DB
-            - name: KC_DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-db
-                  key: KC_DB_URL
-            - name: KC_DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-db
-                  key: KC_DB_USERNAME
-            - name: KC_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-db
-                  key: KC_DB_PASSWORD
             - name: KC_HOSTNAME
               value: auth-netflix.habdelazim.xyz
             - name: KC_PROXY
@@ -62,11 +42,11 @@ spec:
             httpGet:
               path: /health/ready
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health/live
               port: 8080
-            initialDelaySeconds: 90
+            initialDelaySeconds: 60
             periodSeconds: 10
