@@ -19,15 +19,24 @@ spec:
         - name: oauth2-proxy
           image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
           imagePullPolicy: IfNotPresent
+
           args:
             - --http-address=0.0.0.0:4180
             - --provider=oidc
             - --scope=openid profile email
-            - --oidc-issuer-url=https://auth-netfix.habdelazim.xyz/realms/master
+            - --oidc-issuer-url=https://auth-netflix.habdelazim.xyz/realms/master
             - --client-id=oauth2-proxy
-            - --client-secret=$(OAUTH2_PROXY_CLIENT_SECRET)
+
+            # - --client-secret=$(OAUTH2_PROXY_CLIENT_SECRET)
+            # ❌ REMOVE: client secret must NOT be hardcoded in args.
+            # ❌ It will be provided at runtime via Kubernetes Secret.
+
             - --upstream=http://app-service.netfix-app.svc.cluster.local:80
-            - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
+
+            # - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
+            # ❌ REMOVE: cookie secret must NOT be hardcoded in args.
+            # ❌ It will be provided at runtime via Kubernetes Secret.
+
             - --cookie-secure=true
             - --redirect-url=https://netfix.habdelazim.xyz/oauth2/callback
             - --ping-path=/ping
@@ -36,20 +45,19 @@ spec:
             - --code-challenge-method=S256
             - --cookie-domain=.habdelazim.xyz
             - --whitelist-domain=.habdelazim.xyz
-          env:
-            - name: OAUTH2_PROXY_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: oauth2-proxy
-                  key: OAUTH2_PROXY_CLIENT_SECRET
-            - name: OAUTH2_PROXY_COOKIE_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: oauth2-proxy
-                  key: OAUTH2_PROXY_COOKIE_SECRET
+
+          # env:
+          # ❌ REMOVE: do NOT define individual secret env vars here.
+
+          envFrom:
+            - secretRef:
+                name: oauth2-proxy
+                # ✅ The Secret is created at runtime by keycloak-bootstrap Job
+
           ports:
             - containerPort: 4180
               protocol: TCP
+
           resources:
             requests:
               cpu: 50m
@@ -57,4 +65,5 @@ spec:
             limits:
               cpu: 200m
               memory: 256Mi
+
 

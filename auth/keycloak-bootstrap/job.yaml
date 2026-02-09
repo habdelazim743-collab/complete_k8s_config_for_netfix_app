@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-bootstrap
+  namespace: auth
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+        - name: bootstrap
+          image: bitnami/kubectl:1.29
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+
+              echo "Waiting for Keycloak..."
+              until kubectl get pods -n auth -l app=keycloak | grep Running; do
+                sleep 5
+              done
+
+              echo "Login to Keycloak"
+              TOKEN=$(curl -s \
+                -d "username=admin" \
+                -d "password=${KEYCLOAK_ADMIN_PASSWORD}" \
+                -d "grant_type=password" \
+                -d "client_id=admin-cli" \
+                http://keycloak:8080/realms/master/protocol/openid-connect/token \
+                | jq -r .access_token)
+
+              echo "Create oauth2-proxy client"
+              curl -s -X POST \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" \
+                http://keycloak:8080/admin/realms/master/clients \
+                -d '{
+                  "clientId": "oauth2-proxy",
+                  "enabled": true,
+                  "publicClient": false,
+                  "redirectUris": ["https://auth-netflix.habdelazim.xyz/oauth2/callback"]
+                }'
+
+              CLIENT_ID=$(curl -s \
+                -H "Authorization: Bearer $TOKEN" \
+                http://keycloak:8080/admin/realms/master/clients \
+                | jq -r '.[] | select(.clientId=="oauth2-proxy") | .id')
+
+              SECRET=$(curl -s \
+                -H "Authorization: Bearer $TOKEN" \
+                http://keycloak:8080/admin/realms/master/clients/$CLIENT_ID/client-secret \
+                | jq -r .value)
+
+              kubectl create secret generic oauth2-proxy \
+                -n auth \
+                --from-literal=OAUTH2_PROXY_CLIENT_ID=oauth2-proxy \
+                --from-literal=OAUTH2_PROXY_CLIENT_SECRET=$SECRET \
+                --dry-run=client -o yaml | kubectl apply -f -
+          env:
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KEYCLOAK_ADMIN_PASSWORD
+      restartPolicy: OnFailure
+
