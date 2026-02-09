@@ -5,26 +5,22 @@ metadata:
   namespace: argocd
 spec:
   project: default
-
   source:
-    repoURL: https://helm.kubeshark.co
-    chart: kubeshark
-    targetRevision: "*"
+    repoURL: 'https://github.com/kubeshark/kubeshark'
+    targetRevision: HEAD
+    path: helm-chart
     helm:
-      valueFiles:
-        - values.yaml
       parameters:
         - name: tap.enabled
           value: "true"
-
+      valueFiles:
+        - values.yaml
   destination:
-    server: https://kubernetes.default.svc
+    server: 'https://kubernetes.default.svc'
     namespace: kubeshark
-
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-
