@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubeshark
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://helm.kubeshark.co
+    chart: kubeshark
+    targetRevision: "*"
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: tap.enabled
+          value: "true"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubeshark
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
