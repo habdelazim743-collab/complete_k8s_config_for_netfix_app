@@ -3,8 +3,8 @@ kind: Deployment
 metadata:
   name: keycloak
   namespace: auth
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app: keycloak
 spec:
   replicas: 1
   selector:
@@ -18,71 +18,117 @@ spec:
       containers:
         - name: keycloak
           image: mfadl237/keycloak-netflix:1
+          imagePullPolicy: Always
+
           command:
             - /opt/keycloak/bin/kc.sh
           args:
             - start
+
+          ports:
+            - containerPort: 8080
+
           env:
+            # ===== Admin =====
             - name: KEYCLOAK_ADMIN
               valueFrom:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN
+
             - name: KEYCLOAK_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN_PASSWORD
+
+            # ===== Database =====
             - name: KC_DB
               value: postgres
-            - name: KC_DB_URL
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-db
-                  key: KC_DB_URL
+
+            #- name: KC_DB_URL_HOST
+             # valueFrom:
+              #  secretKeyRef:
+                #  name: keycloak-db
+                 # key: KC_DB_URL_HOST
+
+            #- name: KC_DB_URL_PORT
+             # valueFrom:
+              #  secretKeyRef:
+               #   name: keycloak-db
+                #  key: KC_DB_URL_PORT
+
+            #- name: KC_DB_URL_DATABASE
+             # valueFrom:
+              #  secretKeyRef:
+               #   name: keycloak-db
+                #  key: KC_DB_URL_DATABASE
+
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: keycloak-db
                   key: KC_DB_USERNAME
+
             - name: KC_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: keycloak-db
                   key: KC_DB_PASSWORD
-            - name: KC_PROXY
-              value: edge
+            - name: KC_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_URL
+
+
+      #      - name: KC_DB_URL
+       #       value: jdbc:postgresql://$(KC_DB_URL_HOST):$(KC_DB_URL_PORT)/$(KC_DB_URL_DATABASE)
+
+            # ===== HTTP / Proxy =====
             - name: KC_HTTP_ENABLED
               value: "true"
+
+            - name: KC_PROXY
+              value: edge
+
             - name: KC_HOSTNAME
-              value: auth-netflix.habdelazim.xyz
-            - name: KC_HEALTH_ENABLED
-              value: "true"
+              value: auth-netfix.habdelazim.xyz
+
             - name: KC_HOSTNAME_STRICT
               value: "false"
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
+
+            # ===== Health =====
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+
+          # ===== Probes (Management Port 9000) =====
           startupProbe:
             httpGet:
               path: /health/ready
-              port: 8080
-              failureThreshold: 60
-              periodSeconds: 5
+              port: 9000
+            failureThreshold: 90
+            periodSeconds: 5
+
           livenessProbe:
             httpGet:
               path: /health/live
               port: 9000
             initialDelaySeconds: 120
             periodSeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 5
+
           readinessProbe:
             httpGet:
               path: /health/ready
               port: 9000
-            initialDelaySeconds: 90
+            initialDelaySeconds: 120
             periodSeconds: 10
-            failureThreshold: 3
-            timeoutSeconds: 5
+
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+
