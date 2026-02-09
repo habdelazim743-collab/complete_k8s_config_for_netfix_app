@@ -17,9 +17,11 @@ spec:
     spec:
       containers:
         - name: keycloak
-          image: quay.io/keycloak/keycloak:24.0.1
+          image: mfadl237/keycloak-netflix:1
+          command:
+            - /opt/keycloak/bin/kc.sh
           args:
-            - start-dev
+            - start
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
@@ -31,22 +33,50 @@ spec:
                 secretKeyRef:
                   name: keycloak-admin
                   key: KEYCLOAK_ADMIN_PASSWORD
-            - name: KC_HOSTNAME
-              value: auth-netflix.habdelazim.xyz
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_URL
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_USERNAME
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db
+                  key: KC_DB_PASSWORD
             - name: KC_PROXY
               value: edge
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HOSTNAME
+              value: auth-netflix.habdelazim.xyz
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
           ports:
             - containerPort: 8080
               name: http
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 8080
-            initialDelaySeconds: 60
+              port: 9000
+            initialDelaySeconds: 120
             periodSeconds: 10
+            failureThreshold: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 9000
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5

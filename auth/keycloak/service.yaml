@@ -3,9 +3,14 @@ kind: Service
 metadata:
   name: keycloak
   namespace: auth
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
 spec:
+  type: ClusterIP
   selector:
     app: keycloak
   ports:
-    - port: 80
+    - name: http
+      port: 8080
       targetPort: 8080
+      protocol: TCP
