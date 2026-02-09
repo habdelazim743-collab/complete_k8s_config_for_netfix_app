@@ -1,7 +1,14 @@
 tap:
   enabled: true
 
+cloud:
+  enabled: false
+
+hub:
+  extraArgs: {}
+
 worker:
+  extraArgs: {}
   resources:
     requests:
       cpu: 200m

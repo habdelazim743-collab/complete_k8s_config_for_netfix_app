@@ -3,19 +3,18 @@ kind: Application
 metadata:
   name: kubeshark
   namespace: argocd
+  labels:
+    argocd.argoproj.io/instance: netfix-root
 spec:
   project: default
 
   source:
-    repoURL: ghcr.io/kubeshark/helm
+    repoURL: https://helm.kubeshark.co
     chart: kubeshark
-    targetRevision: 52.2.5
+    targetRevision: "*"
     helm:
-      parameters:
-        - name: tap.enabled
-          value: "true"
-        - name: cloud.enabled
-          value: "false"
+      valueFiles:
+        - kubeshark/values.yaml
 
   destination:
     server: https://kubernetes.default.svc
