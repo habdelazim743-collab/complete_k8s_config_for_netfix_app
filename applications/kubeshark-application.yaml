@@ -10,19 +10,22 @@ spec:
     repoURL: https://helm.kubeshark.com
     targetRevision: 52.3.78
     helm:
-      valueFiles:
-        - $values/kubeshark-values/values.yaml  # ← Points to values file
-  sources:
-    - repoURL: https://helm.kubeshark.com
-      chart: kubeshark
-      targetRevision: 52.3.78
-      helm:
-        valueFiles:
-          - $values/kubeshark-values/values.yaml
-    - repoURL: https://github.com/habdelazim743-collab
-/complete_k8s_config_for_netfix_app
-      targetRevision: main
-      ref: values  # ← This is the Git repo with values.yaml
+      valuesObject:
+        tap:
+          docker:
+            registry: docker.io/kubeshark
+            tag: latest
+        resources:
+          limits:
+            cpu: 750m
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        frontend:
+          service:
+            type: ClusterIP
+        persistentStorage: false
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeshark
