@@ -11,10 +11,6 @@ spec:
     targetRevision: 52.3.78
     helm:
       valuesObject:
-        tap:
-          docker:
-            registry: docker.io/kubeshark
-            tag: "52.3.78"
         resources:
           limits:
             cpu: 750m
@@ -25,8 +21,6 @@ spec:
         frontend:
           service:
             type: ClusterIP
-          env:
-            REACT_APP_DISSECTORS_UPDATING_ENABLED: "true"
         persistentStorage: false
   destination:
     server: https://kubernetes.default.svc
