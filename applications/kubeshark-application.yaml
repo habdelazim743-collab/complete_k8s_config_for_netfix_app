@@ -5,42 +5,59 @@ metadata:
   namespace: argocd
 spec:
   project: default
+
   source:
     repoURL: https://helm.kubeshark.com
     chart: kubeshark
-    targetRevision: 41.3.0
+    targetRevision: 52.11.0
+
     helm:
       valuesObject:
+
+        # 🔴 Disable Enterprise (No License Needed)
         enterprise:
           enabled: false
-        
-        serviceAccount:
-          create: true
-          name: kubeshark-service-account
-        
+
+        # Frontend Service
         frontend:
           service:
             type: ClusterIP
-        
+
+        # Disable Persistent Storage (Optional)
         persistentStorage: false
-        
-        # Add environment variables for the hub pod
+
+        # Hub Resources
+        resources:
+          limits:
+            cpu: 750m
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+
+        # Tap (Traffic Capture) Settings
         tap:
+          hostNetwork: false
+
+          metrics:
+            port: 19100
+
           resources:
             limits:
-              memory: 1Gi
               cpu: 750m
+              memory: 5Gi
             requests:
-              memory: 512Mi
-              cpu: 250m
-  
+              cpu: 50m
+              memory: 50Mi
+
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeshark
-  
+
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+
     syncOptions:
       - CreateNamespace=true
