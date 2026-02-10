@@ -3,14 +3,25 @@ kind: Application
 metadata:
   name: kubeshark
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/habdelazim743-collab/complete_k8s_config_for_netfix_app.git # Same repo
-    targetRevision: main
-    path: kubeshark  # Points to the kubeshark directory
+    chart: kubeshark
+    repoURL: https://helm.kubeshark.com
+    targetRevision: 52.3.78
+    helm:
+      valueFiles:
+        - $values/kubeshark-values/values.yaml  # ← Points to values file
+  sources:
+    - repoURL: https://helm.kubeshark.com
+      chart: kubeshark
+      targetRevision: 52.3.78
+      helm:
+        valueFiles:
+          - $values/kubeshark-values/values.yaml
+    - repoURL: https://github.com/YOUR-USERNAME/complete_k8s_config_for_netfix_app
+      targetRevision: main
+      ref: values  # ← This is the Git repo with values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeshark
