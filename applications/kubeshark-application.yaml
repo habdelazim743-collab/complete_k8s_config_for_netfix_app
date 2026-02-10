@@ -15,6 +15,13 @@ spec:
           hostNetwork: false
           metrics:
             port: 19100
+          resources:
+            requests:
+              cpu: 50m        # Reduce from 100m to 50m
+              memory: 50Mi
+            limits:
+              cpu: 750m
+              memory: 5Gi
         resources:
           limits:
             cpu: 750m
