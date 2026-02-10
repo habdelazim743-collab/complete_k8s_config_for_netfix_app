@@ -34,6 +34,8 @@ spec:
           - --skip-auth-regex=^/watch.*$
           - --skip-auth-regex=^/static/.*$
           - --skip-auth-regex=^/media/.*$
+          - --skip-auth-regex=.*\.mp4$
+          - --skip-auth-regex=.*\.m3u8$
         envFrom:
           - secretRef:
               name: oauth2-proxy-secret
