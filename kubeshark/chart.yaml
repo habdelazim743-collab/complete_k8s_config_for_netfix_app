@@ -4,4 +4,4 @@ version: 1.0.0
 dependencies:
   - name: kubeshark
     version: 52.3.78
-    repository: https://helm.kubeshark.co
+    repository: https://helm.kubeshark.com
