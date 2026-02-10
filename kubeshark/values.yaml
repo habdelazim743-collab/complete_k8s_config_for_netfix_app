@@ -1,26 +1,19 @@
-tap:
-  enabled: true
-
-cloud:
-  enabled: false
-
-hub:
-  extraArgs: {}
+kubeshark:
+  tap:
+    docker:
+      registry: docker.io/kubeshark
+      tag: latest
+  
   resources:
-    requests:
-      cpu: 200m
-      memory: 256Mi
     limits:
-      cpu: 500m
-      memory: 512Mi
-
-worker:
-  extraArgs: {}
-  resources:
+      cpu: 750m
+      memory: 1Gi
     requests:
-      cpu: 200m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-
+      cpu: 50m
+      memory: 50Mi
+  
+  frontend:
+    service:
+      type: ClusterIP
+  
+  persistentStorage: false
