@@ -14,41 +14,28 @@ spec:
     helm:
       valuesObject:
 
-        # ✅ Community Edition (No Enterprise / No License)
         enterprise:
           enabled: false
 
-        # ✅ Frontend (Default port works fine in this version)
+        # 🔥 important fixes
+        rbac:
+          create: true
+
+        serviceAccount:
+          create: true
+          name: kubeshark-service-account
+
+        workers:
+          enabled: false
+
+        tap:
+          enabled: false
+
         frontend:
           service:
             type: ClusterIP
 
-        # ✅ Disable PVCs (simpler + no storage issues)
         persistentStorage: false
-
-        # ✅ Hub resources
-        resources:
-          limits:
-            cpu: 750m
-            memory: 1Gi
-          requests:
-            cpu: 50m
-            memory: 50Mi
-
-        # ✅ Tap (traffic capture)
-        tap:
-          hostNetwork: false
-
-          metrics:
-            port: 19100
-
-          resources:
-            limits:
-              cpu: 750m
-              memory: 5Gi
-            requests:
-              cpu: 50m
-              memory: 50Mi
 
   destination:
     server: https://kubernetes.default.svc
