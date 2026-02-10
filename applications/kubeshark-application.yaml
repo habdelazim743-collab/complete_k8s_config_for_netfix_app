@@ -14,19 +14,19 @@ spec:
     helm:
       valuesObject:
 
-        # 🔴 Disable Enterprise (No License Needed)
+        # ✅ Community Edition (No Enterprise / No License)
         enterprise:
           enabled: false
 
-        # Frontend Service
+        # ✅ Frontend (Default port works fine in this version)
         frontend:
           service:
             type: ClusterIP
 
-        # Disable Persistent Storage (Optional)
+        # ✅ Disable PVCs (simpler + no storage issues)
         persistentStorage: false
 
-        # Hub Resources
+        # ✅ Hub resources
         resources:
           limits:
             cpu: 750m
@@ -35,7 +35,7 @@ spec:
             cpu: 50m
             memory: 50Mi
 
-        # Tap (Traffic Capture) Settings
+        # ✅ Tap (traffic capture)
         tap:
           hostNetwork: false
 
@@ -58,6 +58,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
-
     syncOptions:
       - CreateNamespace=true
+
