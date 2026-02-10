@@ -24,7 +24,7 @@ spec:
           - --oidc-issuer-url=https://auth-netfix.habdelazim.xyz/realms/master
           - --redirect-url=https://netfix.habdelazim.xyz/oauth2/callback
 
-          - --upstream=http://app-service.auth.svc.cluster.local:80
+          - --upstream=http://app-service.default.svc.cluster.local:80
 
           - --email-domain=*
           - --cookie-secure=true

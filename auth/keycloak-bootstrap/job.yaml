@@ -4,9 +4,11 @@ metadata:
   name: keycloak-bootstrap
   namespace: auth
 spec:
+  backoffLimit: 5
   template:
     spec:
       serviceAccountName: keycloak-bootstrap
+      restartPolicy: OnFailure
       containers:
       - name: bootstrap
         image: alpine:3.19
@@ -14,13 +16,20 @@ spec:
         args:
         - |
           set -e
-          apk add --no-cache curl jq
-
-          echo "Waiting for Keycloak HTTP..."
-          until curl -sf http://10.0.2.158:9000/health/ready; do
+          echo "Installing tools..."
+          apk add --no-cache curl jq openssl
+          
+          echo "Installing kubectl..."
+          curl -LO "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          mv kubectl /usr/local/bin/
+          
+          echo "Waiting for Keycloak..."
+          until curl -sf http://keycloak:8080/realms/master; do
+            echo "Keycloak not ready, retrying..."
             sleep 5
           done
-
+          
           echo "Login to Keycloak"
           TOKEN=$(curl -s \
             -d "username=${KEYCLOAK_ADMIN}" \
@@ -29,35 +38,116 @@ spec:
             -d "client_id=admin-cli" \
             http://keycloak:8080/realms/master/protocol/openid-connect/token \
             | jq -r .access_token)
-
-          echo "Create oauth2-proxy client (idempotent)"
-          curl -s -X POST \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            http://keycloak:8080/admin/realms/master/clients \
-            -d '{
-              "clientId": "oauth2-proxy",
-              "enabled": true,
-              "publicClient": false,
-              "redirectUris": ["https://auth-netfix.habdelazim.xyz/oauth2/callback"]
-            }' || true
-
+          
+          if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+            echo "❌ Failed to get admin token"
+            exit 1
+          fi
+          echo "✅ Successfully authenticated"
+          
+          echo "Checking if oauth2-proxy client exists..."
           CLIENT_ID=$(curl -s \
             -H "Authorization: Bearer $TOKEN" \
             http://keycloak:8080/admin/realms/master/clients \
             | jq -r '.[] | select(.clientId=="oauth2-proxy") | .id')
-
+          
+          if [ -z "$CLIENT_ID" ]; then
+            echo "Client does not exist, creating oauth2-proxy client..."
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              http://keycloak:8080/admin/realms/master/clients \
+              -d '{
+                "clientId": "oauth2-proxy",
+                "enabled": true,
+                "publicClient": false,
+                "redirectUris": ["https://netfix.habdelazim.xyz/oauth2/callback"],
+                "protocol": "openid-connect"
+              }')
+            
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            
+            if [ "$HTTP_CODE" -eq 201 ]; then
+              echo "✅ Client created successfully"
+            else
+              echo "❌ Failed to create client. HTTP code: $HTTP_CODE"
+              echo "$RESPONSE"
+              exit 1
+            fi
+            
+            # Get the newly created client ID
+            CLIENT_ID=$(curl -s \
+              -H "Authorization: Bearer $TOKEN" \
+              http://keycloak:8080/admin/realms/master/clients \
+              | jq -r '.[] | select(.clientId=="oauth2-proxy") | .id')
+          else
+            echo "✅ Client already exists (idempotent)"
+          fi
+          
+          if [ -z "$CLIENT_ID" ]; then
+            echo "❌ Failed to get client ID"
+            exit 1
+          fi
+          
+          echo "Getting client secret..."
           SECRET=$(curl -s \
             -H "Authorization: Bearer $TOKEN" \
             http://keycloak:8080/admin/realms/master/clients/$CLIENT_ID/client-secret \
             | jq -r .value)
-
-          kubectl create secret generic oauth2-proxy-secret \
-            -n auth \
-            --from-literal=OAUTH2_PROXY_CLIENT_ID=oauth2-proxy \
-            --from-literal=OAUTH2_PROXY_CLIENT_SECRET=$SECRET \
-            --from-literal=OAUTH2_PROXY_COOKIE_SECRET=$(openssl rand -base64 32) \
-            --dry-run=client -o yaml | kubectl apply -f -
+          
+          if [ -z "$SECRET" ] || [ "$SECRET" = "null" ]; then
+            echo "❌ Failed to get client secret"
+            exit 1
+          fi
+          
+          echo "Checking if Kubernetes secret exists..."
+          if kubectl get secret oauth2-proxy-secret -n auth &>/dev/null; then
+            echo "Secret already exists, checking if update is needed..."
+            EXISTING_SECRET=$(kubectl get secret oauth2-proxy-secret -n auth -o json | jq -r '.data.OAUTH2_PROXY_CLIENT_SECRET' | base64 -d)
+            
+            if [ "$EXISTING_SECRET" = "$SECRET" ]; then
+              echo "✅ Secret is up to date (idempotent)"
+            else
+              echo "Secret has changed, updating..."
+              COOKIE_SECRET=$(openssl rand -base64 32 | head -c 32)
+              kubectl apply -n auth -f - <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: oauth2-proxy-secret
+          type: Opaque
+          stringData:
+            OAUTH2_PROXY_CLIENT_ID: oauth2-proxy
+            OAUTH2_PROXY_CLIENT_SECRET: $SECRET
+            OAUTH2_PROXY_COOKIE_SECRET: $COOKIE_SECRET
+          EOF
+              echo "✅ Secret updated"
+            fi
+          else
+            echo "Creating new Kubernetes secret..."
+            COOKIE_SECRET=$(openssl rand -base64 32 | head -c 32)
+            kubectl apply -n auth -f - <<EOF
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: oauth2-proxy-secret
+          type: Opaque
+          stringData:
+            OAUTH2_PROXY_CLIENT_ID: oauth2-proxy
+            OAUTH2_PROXY_CLIENT_SECRET: $SECRET
+            OAUTH2_PROXY_COOKIE_SECRET: $COOKIE_SECRET
+          EOF
+            echo "✅ Secret created"
+          fi
+          
+          echo "✅ Bootstrap completed successfully"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
         env:
         - name: KEYCLOAK_ADMIN
           valueFrom:
@@ -69,5 +159,3 @@ spec:
             secretKeyRef:
               name: keycloak-admin
               key: KEYCLOAK_ADMIN_PASSWORD
-      restartPolicy: OnFailure
-
