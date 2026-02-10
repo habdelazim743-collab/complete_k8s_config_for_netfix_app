@@ -12,7 +12,6 @@ metadata:
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:231056963705:certificate/6c8a2188-4929-4080-bfdd-ad506fad2fba
     alb.ingress.kubernetes.io/healthcheck-path: /ping
     alb.ingress.kubernetes.io/healthcheck-port: "4180"
-    #alb.ingress.kubernetes.io/healthcheck-port: "8080"
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/success-codes: "200,302"
 spec:
@@ -21,13 +20,36 @@ spec:
     - host: netfix.habdelazim.xyz
       http:
         paths:
+          # Videos bypass OAuth2 Proxy - direct to app
+          - path: /watch
+            pathType: Prefix
+            backend:
+              service:
+                name: app-service
+                port:
+                  number: 80
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: app-service
+                port:
+                  number: 80
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: app-service
+                port:
+                  number: 80
+          # Everything else goes through OAuth2 Proxy
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: oauth2-proxy
                 port:
-                  number: 4180 
+                  number: 4180
     - host: auth-netfix.habdelazim.xyz
       http:
         paths:
