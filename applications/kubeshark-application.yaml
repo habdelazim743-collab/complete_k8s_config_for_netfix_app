@@ -5,46 +5,42 @@ metadata:
   namespace: argocd
 spec:
   project: default
-
   source:
     repoURL: https://helm.kubeshark.com
     chart: kubeshark
     targetRevision: 41.3.0
-
     helm:
       valuesObject:
-
         enterprise:
           enabled: false
-
-        # 🔥 important fixes
-        rbac:
-          create: true
-
+        
         serviceAccount:
           create: true
           name: kubeshark-service-account
-
-        workers:
-          enabled: false
-
-        tap:
-          enabled: false
-
+        
         frontend:
           service:
             type: ClusterIP
-
+        
         persistentStorage: false
-
+        
+        # Add environment variables for the hub pod
+        tap:
+          resources:
+            limits:
+              memory: 1Gi
+              cpu: 750m
+            requests:
+              memory: 512Mi
+              cpu: 250m
+  
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeshark
-
+  
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-
