@@ -16,66 +16,105 @@ spec:
         args:
         - |
           set -e
+
           echo "Installing tools..."
           apk add --no-cache curl jq openssl
-          
+
           echo "Installing kubectl..."
           curl -LO "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
           chmod +x kubectl
           mv kubectl /usr/local/bin/
-          
+
           echo "Waiting for Keycloak..."
-          until curl -sf http://keycloak:8080/realms/master; do
+          until curl -sf http://keycloak:8080/realms/master > /dev/null; do
             echo "Keycloak not ready, retrying..."
             sleep 5
           done
-          
+
           echo "Login to Keycloak"
-          TOKEN=$(curl -s \
+          TOKEN_RESPONSE=$(curl -s \
             -d "username=${KEYCLOAK_ADMIN}" \
             -d "password=${KEYCLOAK_ADMIN_PASSWORD}" \
             -d "grant_type=password" \
             -d "client_id=admin-cli" \
-            http://keycloak:8080/realms/master/protocol/openid-connect/token \
-            | jq -r .access_token)
-          
+            http://keycloak:8080/realms/master/protocol/openid-connect/token)
+
+          echo "Token response: $TOKEN_RESPONSE"
+
+          TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r .access_token)
+
           if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
             echo "❌ Failed to get admin token"
             exit 1
           fi
           echo "✅ Successfully authenticated"
-          
-          echo "Checking if oauth2-proxy client exists..."
+
+          echo "Checking oauth2-proxy client..."
           CLIENT_UUID=$(curl -s \
             -H "Authorization: Bearer $TOKEN" \
             http://keycloak:8080/admin/realms/master/clients \
             | jq -r '.[] | select(.clientId=="oauth2-proxy") | .id')
-          
-          if [ -n "$CLIENT_UUID" ]; then
-            echo "✅ Client exists, updating redirect URIs..."
-            curl -s -X PUT \
+
+          if [ -z "$CLIENT_UUID" ]; then
+            echo "oauth2-proxy client not found, creating it..."
+
+            curl -s -X POST \
               -H "Authorization: Bearer $TOKEN" \
               -H "Content-Type: application/json" \
-              http://keycloak:8080/admin/realms/master/clients/$CLIENT_UUID \
+              http://keycloak:8080/admin/realms/master/clients \
               -d '{
                 "clientId": "oauth2-proxy",
                 "enabled": true,
+                "protocol": "openid-connect",
                 "publicClient": false,
+                "standardFlowEnabled": true,
+                "directAccessGrantsEnabled": false,
                 "redirectUris": [
                   "https://netfix.habdelazim.xyz/oauth2/callback",
                   "https://netfix.habdelazim.xyz/*"
                 ],
-                "webOrigins": ["+"],
-                "protocol": "openid-connect",
-                "standardFlowEnabled": true,
-                "directAccessGrantsEnabled": false
+                "webOrigins": ["+"]
               }'
-            echo "✅ Client updated with correct redirect URIs"
+
+            echo "Client created, fetching UUID..."
+            CLIENT_UUID=$(curl -s \
+              -H "Authorization: Bearer $TOKEN" \
+              http://keycloak:8080/admin/realms/master/clients \
+              | jq -r '.[] | select(.clientId=="oauth2-proxy") | .id')
           else
-            echo "Client doesn't exist, skipping..."
+            echo "oauth2-proxy client already exists"
           fi
-          
-          echo "✅ Fix completed successfully"
+
+          if [ -z "$CLIENT_UUID" ]; then
+            echo "❌ Failed to create or find oauth2-proxy client"
+            exit 1
+          fi
+
+          echo "Fetching oauth2-proxy client secret..."
+          CLIENT_SECRET=$(curl -s \
+            -H "Authorization: Bearer $TOKEN" \
+            http://keycloak:8080/admin/realms/master/clients/$CLIENT_UUID/client-secret \
+            | jq -r .value)
+
+          if [ -z "$CLIENT_SECRET" ] || [ "$CLIENT_SECRET" = "null" ]; then
+            echo "❌ Failed to fetch client secret"
+            exit 1
+          fi
+
+          echo "Generating cookie secret..."
+          COOKIE_SECRET=$(openssl rand 16 | base64)
+
+          echo "Creating / Updating oauth2-proxy-secret in Kubernetes..."
+          kubectl create secret generic oauth2-proxy-secret \
+            -n auth \
+            --from-literal=OAUTH2_PROXY_CLIENT_ID=oauth2-proxy \
+            --from-literal=OAUTH2_PROXY_CLIENT_SECRET=$CLIENT_SECRET \
+            --from-literal=OAUTH2_PROXY_COOKIE_SECRET=$COOKIE_SECRET \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "✅ oauth2-proxy-secret ready"
+          echo "✅ Keycloak bootstrap completed successfully"
+
         env:
         - name: KEYCLOAK_ADMIN
           valueFrom:
@@ -87,3 +126,4 @@ spec:
             secretKeyRef:
               name: keycloak-admin
               key: KEYCLOAK_ADMIN_PASSWORD
+
