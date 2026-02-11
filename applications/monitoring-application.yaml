@@ -24,6 +24,7 @@ spec:
     - repoURL: https://github.com/habdelazim743-collab/complete_k8s_config_for_netfix_app
       targetRevision: main
       ref: values
+      path: monitoring
       directory: 
         recurse: true
 
