@@ -12,12 +12,12 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
 
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:231056963705:certificate/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:231056963705:certificate/6c8a2188-4929-4080-bfdd-ad506fad2fba
 
     alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/healthcheck-port: "5601"
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/success-codes: "200,302"
 spec:
   ingressClassName: alb
   rules:
@@ -28,7 +28,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kibana
+                name: monitoring-kibana
                 port:
                   number: 5601
 
