@@ -20,7 +20,7 @@ spec:
 
 
   sources:
-    # repo بتاع values
+    # values Repo
     - repoURL: https://github.com/habdelazim743-collab/complete_k8s_config_for_netfix_app
       targetRevision: main
       ref: values
@@ -35,27 +35,4 @@ spec:
         valueFiles:
           - $values/monitoring/prometheus/values.yaml
 
-    # Elasticsearch
-    - repoURL: https://helm.elastic.co
-      chart: elasticsearch
-      targetRevision: 7.17.3
-      helm:
-        valueFiles:
-          - $values/monitoring/elk/elasticsearch-values.yaml
-
-    # Kibana
-    - repoURL: https://helm.elastic.co
-      chart: kibana
-      targetRevision: 7.17.3
-      helm:
-        valueFiles:
-          - $values/monitoring/elk/kibana-values.yaml
-
-    # Filebeat
-    - repoURL: https://helm.elastic.co
-      chart: filebeat
-      targetRevision: 7.17.3
-      helm:
-        valueFiles:
-          - $values/monitoring/elk/filebeat-values.yaml
 
