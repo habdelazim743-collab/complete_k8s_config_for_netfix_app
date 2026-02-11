@@ -46,7 +46,8 @@ grafana:
           type: prometheus
           access: proxy
           url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
-          isDefault: false
+
+          isDefault: true
   dashboards:
     default:
       kubernetes-cluster:
