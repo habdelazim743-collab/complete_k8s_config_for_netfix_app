@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: mahmoudtots/netflix-clone:61
+          image: mahmoudtots/netflix-clone:62
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
