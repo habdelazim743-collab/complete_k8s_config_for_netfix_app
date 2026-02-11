@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: monitoring
+  name: logging
   namespace: argocd
 spec:
   project: default
@@ -33,7 +33,7 @@ spec:
       targetRevision: 7.17.3
       helm:
         valueFiles:
-          - $values/monitoring/elk/elasticsearch-values.yaml
+          - $values/logging/elasticsearch-values.yaml
 
     # Kibana
     - repoURL: https://helm.elastic.co
@@ -41,7 +41,7 @@ spec:
       targetRevision: 7.17.3
       helm:
         valueFiles:
-          - $values/monitoring/elk/kibana-values.yaml
+          - $values/logging/kibana-values.yaml
 
     # Filebeat
     - repoURL: https://helm.elastic.co
@@ -49,5 +49,5 @@ spec:
       targetRevision: 7.17.3
       helm:
         valueFiles:
-          - $values/monitoring/elk/filebeat-values.yaml
-
+          - $values/logging/filebeat-values.yaml
+  
