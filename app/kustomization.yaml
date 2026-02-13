@@ -5,4 +5,4 @@ resources:
 
 images:
   - name: mahmoudtots/netflix-clone
-    newTag: "581"
+    newTag: "582"
